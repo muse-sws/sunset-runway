@@ -1,66 +1,88 @@
-/* Sunset Runway — page shell only. All in-game art is drawn on the canvas. */
-:root {
-  --navy: #0e2238;
-  --teal: #1f6f6b;
-  --amber: #f2a65a;
-  --paper: #f4ead8;
-  --ink: #10202e;
-}
-* { box-sizing: border-box; }
-html, body { margin: 0; padding: 0; background: var(--navy); }
-body {
-  font-family: "Trebuchet MS", "Segoe UI", Verdana, sans-serif;
-  color: var(--paper);
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.stage { position: relative; width: min(1280px, 100vw); }
-canvas {
-  display: block;
-  width: 100%;
-  height: auto;
-  background: #16324f;
-  border: 3px solid #2c4a63;
-  border-radius: 10px;
-}
-.overlay {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 24px;
-  text-align: center;
-  background: rgba(10, 28, 46, 0.72);
-  border-radius: 10px;
-}
-.overlay.hidden { display: none; }
-.overlay h1 {
-  margin: 0;
-  font-size: clamp(34px, 6vw, 64px);
-  letter-spacing: 0.06em;
-  color: var(--amber);
-  text-shadow: 0 3px 0 rgba(0, 0, 0, 0.35);
-}
-.overlay .tag { margin: 0; font-size: 17px; max-width: 640px; line-height: 1.5; }
-.controls { background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.18); border-radius: 8px; padding: 10px 18px; }
-.controls p { margin: 4px 0; font-size: 14px; line-height: 1.5; }
-.controls b { color: var(--amber); }
-#startBtn {
-  font: inherit;
-  font-size: 20px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  color: var(--ink);
-  background: var(--amber);
-  border: 0;
-  border-radius: 999px;
-  padding: 12px 34px;
-  cursor: pointer;
-}
-#startBtn:hover { background: #ffc27a; }
-.fine { margin: 0; font-size: 13px; opacity: 0.85; max-width: 620px; line-height: 1.5; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: 100%; height: 100%; overflow: hidden; background: #0a1420;
+  font-family: "Courier New", ui-monospace, monospace; color: #d8f0d8; }
+#game-container, #game-container canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.hidden { display: none !important; }
+
+/* ---------- HUD ---------- */
+#hud { position: absolute; inset: 0; pointer-events: none; z-index: 5;
+  text-shadow: 0 0 6px rgba(0,0,0,.9), 0 1px 2px rgba(0,0,0,.9); }
+#hud-left, #hud-right { position: absolute; top: 16px; background: rgba(4, 18, 10, .45);
+  border: 1px solid rgba(140, 255, 150, .35); border-radius: 6px; padding: 10px 12px; }
+#hud-left { left: 16px; }
+#hud-right { right: 16px; text-align: right; }
+.hud-row { display: flex; align-items: baseline; gap: 8px; line-height: 1.5; }
+#hud-right .hud-row { justify-content: flex-end; }
+.hud-label { font-size: 11px; letter-spacing: 2px; color: #8cff96; width: 44px; }
+.hud-value { font-size: 22px; font-weight: bold; color: #eaffea; min-width: 64px; text-align: right; }
+.hud-unit { font-size: 11px; color: #9fd8a5; }
+#hud-hull.low { color: #ff5a4e; }
+#hud-fuel.low { color: #ffb02e; }
+
+#hud-top { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); text-align: center; }
+#mission-title { font-size: 19px; font-weight: bold; letter-spacing: 3px; color: #ffe9a8; }
+#mission-objective { font-size: 13px; color: #d8f0d8; margin-top: 3px; }
+#mission-progress { font-size: 13px; color: #8cff96; margin-top: 3px; letter-spacing: 1px; }
+
+#compass { position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%);
+  width: 300px; overflow: hidden; border-top: 1px solid rgba(140,255,150,.4);
+  border-bottom: 1px solid rgba(140,255,150,.4); padding: 4px 0; text-align: center;
+  background: rgba(4,18,10,.35); }
+#compass-strip { font-size: 14px; letter-spacing: 6px; color: #eaffea; white-space: nowrap; }
+#compass-needle { color: #ffe9a8; font-size: 11px; line-height: 1; }
+
+#crosshair { position: absolute; left: 50%; top: 50%; width: 0; height: 0; }
+#crosshair .ch-h { position: absolute; left: -22px; top: -1px; width: 44px; height: 2px; background: rgba(255, 233, 168, .9); box-shadow: 0 0 4px #000; }
+#crosshair .ch-v { position: absolute; left: -1px; top: -22px; width: 2px; height: 44px; background: rgba(255, 233, 168, .9); box-shadow: 0 0 4px #000; }
+#crosshair .ch-ring { position: absolute; left: -14px; top: -14px; width: 28px; height: 28px;
+  border: 2px solid rgba(255, 233, 168, .85); border-radius: 50%; }
+
+#bombsight { position: absolute; left: 50%; top: 62%; transform: translate(-50%, -50%); text-align: center; }
+#bombsight-ring { width: 74px; height: 74px; margin: 0 auto; border: 3px solid #ff5a4e; border-radius: 50%;
+  box-shadow: 0 0 12px rgba(255,90,78,.8), inset 0 0 12px rgba(255,90,78,.5); }
+#bombsight-ring::after { content: "+"; display: block; color: #ff5a4e; font-size: 34px; line-height: 68px; font-weight: bold; }
+#bombsight-label { margin-top: 8px; font-size: 13px; letter-spacing: 2px; color: #ff8a7a; font-weight: bold; }
+#bombsight.locked #bombsight-ring { border-color: #8cff96; box-shadow: 0 0 14px rgba(140,255,150,.9), inset 0 0 12px rgba(140,255,150,.5); }
+#bombsight.locked #bombsight-ring::after { color: #8cff96; }
+#bombsight.locked #bombsight-label { color: #8cff96; }
+
+#horizon { position: absolute; left: 16px; bottom: 18px; width: 110px; height: 46px;
+  border: 1px solid rgba(140,255,150,.35); border-radius: 6px; background: rgba(4,18,10,.45); overflow: hidden; }
+#horizon-line { position: absolute; left: -20px; width: 150px; height: 2px; top: 50%;
+  background: #8cff96; transform-origin: center; }
+#horizon-label { position: absolute; bottom: 3px; width: 100%; text-align: center; font-size: 9px; letter-spacing: 2px; color: #9fd8a5; }
+
+#messages { position: absolute; left: 16px; bottom: 76px; max-width: 420px; font-size: 13px; line-height: 1.6; }
+#messages div { color: #ffe9a8; }
+#kill-feed { position: absolute; right: 16px; bottom: 18px; text-align: right; font-size: 13px; line-height: 1.6; color: #ffb02e; }
+
+/* ---------- overlays ---------- */
+#flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; z-index: 8; transition: opacity .12s; }
+#damage-flash { position: absolute; inset: 0; pointer-events: none; z-index: 8;
+  box-shadow: inset 0 0 90px 30px rgba(255, 40, 20, .55); opacity: 0; transition: opacity .15s; }
+
+#menu, #end-screen { position: absolute; inset: 0; z-index: 10; display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(ellipse at center, rgba(6, 20, 34, .55) 0%, rgba(3, 10, 18, .88) 100%); }
+.menu-inner { max-width: 640px; padding: 36px 40px; text-align: center;
+  background: rgba(4, 16, 10, .72); border: 1px solid rgba(140, 255, 150, .4); border-radius: 10px; }
+.menu-kicker { font-size: 12px; letter-spacing: 3px; color: #8cff96; }
+#menu h1, #end-screen h1 { font-size: 52px; letter-spacing: 8px; color: #ffe9a8; margin: 10px 0 4px;
+  text-shadow: 0 0 24px rgba(255, 200, 80, .35); }
+.menu-sub { font-size: 15px; letter-spacing: 4px; color: #d8f0d8; margin-bottom: 16px; }
+.menu-brief { font-size: 14px; line-height: 1.7; color: #cfe8cf; }
+.menu-missions { text-align: left; margin: 18px auto 6px; max-width: 480px; font-size: 13px; line-height: 2; }
+.menu-missions b { color: #ffe9a8; border: 1px solid #ffe9a8; border-radius: 50%; display: inline-block;
+  width: 20px; height: 20px; line-height: 20px; text-align: center; margin-right: 8px; font-size: 12px; }
+.menu-controls { margin-top: 16px; font-size: 12px; line-height: 2; color: #9fd8a5; }
+.menu-controls span { display: block; }
+#start-btn, #restart-btn { margin-top: 22px; padding: 13px 34px; font-family: inherit; font-size: 17px; font-weight: bold;
+  letter-spacing: 3px; color: #0a1a0c; background: #8cff96; border: none; border-radius: 6px; cursor: pointer; }
+#start-btn:hover, #restart-btn:hover { background: #b6ffb9; }
+#end-stats { margin-top: 14px; font-size: 14px; line-height: 2; color: #ffe9a8; text-align: left; display: inline-block; }
+
+#paused { position: absolute; inset: 0; z-index: 9; display: flex; align-items: center; justify-content: center;
+  background: rgba(3, 10, 18, .6); }
+#paused div { font-size: 24px; letter-spacing: 4px; color: #ffe9a8; border: 1px solid rgba(255,233,168,.5);
+  padding: 18px 30px; border-radius: 8px; background: rgba(4,16,10,.7); }
+#webgl-error { position: absolute; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center;
+  background: #0a1420; font-size: 18px; color: #ff8a7a; }

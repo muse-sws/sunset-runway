@@ -3,24 +3,83 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Sunset Runway — A Flight Game</title>
+<title>Pacific Strike — Atomic Bomb Run, 1945</title>
 <link rel="stylesheet" href="app.css">
 </head>
 <body>
-<main class="stage">
-  <canvas id="game" width="1280" height="720" aria-label="Sunset Runway flight game"></canvas>
-  <div class="overlay" id="overlay">
-    <h1>Sunset Runway</h1>
-    <p class="tag">An original 2D flight game. Fly the rings, follow the river, land on the runway.</p>
-    <div class="controls">
-      <p><b>Up / Down arrows</b> — climb / descend &nbsp;·&nbsp; <b>Left / Right arrows</b> or <b>A / D</b> — bank &amp; turn</p>
-      <p><b>W / S</b> — throttle up / down &nbsp;·&nbsp; <b>Mouse</b> — move to steer, click to boost</p>
-      <p><b>Space</b> — level wings &nbsp;·&nbsp; <b>P</b> — pause &nbsp;·&nbsp; <b>R</b> — restart &nbsp;·&nbsp; <b>M</b> — sound on / off</p>
-    </div>
-    <button id="startBtn" type="button">Take Off</button>
-    <p class="fine">Three sorties in one flight: Ring Run — River Run — Final Approach. Watch fuel and damage. Land slow, low and lined up.</p>
+<div id="game-container"></div>
+
+<!-- HUD -->
+<div id="hud" class="hidden">
+  <div id="hud-left">
+    <div class="hud-row"><span class="hud-label">ALT</span><span id="hud-alt" class="hud-value">0</span><span class="hud-unit">FT</span></div>
+    <div class="hud-row"><span class="hud-label">SPD</span><span id="hud-spd" class="hud-value">0</span><span class="hud-unit">MPH</span></div>
+    <div class="hud-row"><span class="hud-label">HDG</span><span id="hud-hdg" class="hud-value">090</span><span class="hud-unit">&deg;</span></div>
+    <div class="hud-row"><span class="hud-label">THR</span><span id="hud-thr" class="hud-value">0</span><span class="hud-unit">%</span></div>
   </div>
-</main>
-<script type="module" src="app.js"></script>
+  <div id="hud-right">
+    <div class="hud-row"><span class="hud-label">FUEL</span><span id="hud-fuel" class="hud-value">100</span><span class="hud-unit">%</span></div>
+    <div class="hud-row"><span class="hud-label">HULL</span><span id="hud-hull" class="hud-value">100</span><span class="hud-unit">%</span></div>
+    <div class="hud-row"><span class="hud-label">GUNS</span><span id="hud-ammo" class="hud-value">READY</span></div>
+    <div class="hud-row"><span class="hud-label">BOMB</span><span id="hud-bomb" class="hud-value">1 ARMED</span></div>
+  </div>
+  <div id="hud-top">
+    <div id="mission-title">MISSION 1 — LONG FLIGHT</div>
+    <div id="mission-objective">Fly east across the Pacific to the Japanese coast</div>
+    <div id="mission-progress"></div>
+  </div>
+  <div id="compass"><div id="compass-strip"></div><div id="compass-needle">&#9650;</div></div>
+  <div id="crosshair"><div class="ch-h"></div><div class="ch-v"></div><div class="ch-ring"></div></div>
+  <div id="bombsight" class="hidden">
+    <div id="bombsight-ring"></div>
+    <div id="bombsight-label">BOMB SIGHT — PRESS B TO DROP</div>
+  </div>
+  <div id="horizon"><div id="horizon-line"></div><div id="horizon-label">LEVEL</div></div>
+  <div id="messages"></div>
+  <div id="kill-feed"></div>
+</div>
+
+<div id="flash"></div>
+<div id="damage-flash"></div>
+
+<!-- Menu / end screens -->
+<div id="menu">
+  <div class="menu-inner">
+    <div class="menu-kicker">U.S. ARMY AIR FORCES &middot; 1945 &middot; PACIFIC THEATER</div>
+    <h1>PACIFIC STRIKE</h1>
+    <div class="menu-sub">ATOMIC BOMB RUN &mdash; TINIAN TO JAPAN</div>
+    <p class="menu-brief">
+      Fly your B-29 Superfortress across the Pacific. Fight through Japanese interceptors,
+      then line up the bomb sight over the target city and drop the atomic bomb.
+    </p>
+    <div class="menu-missions">
+      <div><b>1</b> LONG FLIGHT &mdash; cross the Pacific to the coast</div>
+      <div><b>2</b> DOGFIGHT &mdash; shoot down the enemy fighters</div>
+      <div><b>3</b> BOMB RUN &mdash; drop the bomb on the target city</div>
+    </div>
+    <div class="menu-controls">
+      <span>&#8592;&#8593;&#8595;&#8594; / WASD &mdash; fly</span>
+      <span>Mouse &mdash; steer &nbsp;&middot;&nbsp; Click / F &mdash; fire guns</span>
+      <span>B &mdash; drop bomb &nbsp;&middot;&nbsp; Space &mdash; level wings</span>
+      <span>P &mdash; pause &nbsp;&middot;&nbsp; R &mdash; restart &nbsp;&middot;&nbsp; M &mdash; mute</span>
+    </div>
+    <button id="start-btn">CLICK TO FLY</button>
+  </div>
+</div>
+
+<div id="end-screen" class="hidden">
+  <div class="menu-inner">
+    <h1 id="end-title">MISSION COMPLETE</h1>
+    <div id="end-body" class="menu-brief"></div>
+    <div id="end-stats"></div>
+    <button id="restart-btn">FLY AGAIN (R)</button>
+  </div>
+</div>
+
+<div id="paused" class="hidden"><div>PAUSED &mdash; PRESS P TO RESUME</div></div>
+<div id="webgl-error" class="hidden">WebGL is not available in this browser.</div>
+
+<script src="three.min.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
