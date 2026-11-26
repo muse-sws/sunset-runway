@@ -1,61 +1,100 @@
-// main.ts — Sunset Runway entry program (Node 22, standard library only).
+// Pacific Strike — entry program.
 //
-// It copies this repository's game/ into the output directory, decodes
-// the base64 screenshots in screenshots-b64/ back to real PNG files in
-// the output screenshots/ folder, then writes dossier.json with
-// buildDossier from the vendor library. The screenshots are stored as
-// base64 text in the repository (so every repo file is UTF-8 text);
-// the program restores the exact original PNG bytes at build time.
-//
-// It runs twice and writes the same bytes both times: the output
-// directory is cleaned first, the copy is a plain recursive copy in
-// sorted order, and the dossier is deterministic for a given input.
-//
-// Run locally with:
-//   mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts
+// Assembles the submission bundle in the output directory: it copies the
+// playable game in, decodes the base64 screenshots back into PNG files,
+// and asks the vendored make.fun helper to write the dossier that
+// describes the whole bundle. Everything here is deterministic on purpose:
+// entries are always handled in sorted order, and nothing in the output
+// depends on the clock, on randomness, or on the order the filesystem
+// happens to hand entries back.
 
-import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
-import { buildDossier } from "./vendor/makefun-game.ts";
+import {
+  cpSync,
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from 'node:fs';
+import { basename, join } from 'node:path';
+import { buildDossier } from './vendor/makefun-game.ts';
 
-const repoRoot = dirname(fileURLToPath(import.meta.url));
-const outDir = process.env.MAKEFUN_OUTPUT_DIR || "/output";
+// Where the finished bundle goes. The grader points this at its own
+// mounted directory; anywhere else, /output is the conventional spot.
+const outDir: string = process.env.MAKEFUN_OUTPUT_DIR || '/output';
 
-// Start from a clean output directory so a second run writes exactly
-// the same bytes as the first, even if files were removed since.
-// Only the CONTENTS are removed, never the directory itself: the
-// grader mounts /output as a writable directory on a read-only
-// filesystem, so deleting it (and recreating it) fails with EACCES.
-mkdirSync(outDir, { recursive: true });
-for (const entry of readdirSync(outDir)) {
-  rmSync(join(outDir, entry), { recursive: true, force: true });
+// The folder this file lives in is the repository root of the entry, so
+// game/ and screenshots-b64/ sit beside it no matter where the command
+// was launched from.
+const repoDir: string = import.meta.dirname;
+
+// Remove every entry inside a directory, leaving the directory itself
+// standing. The grader mounts the output directory on a read-only
+// filesystem, so deleting the directory itself would fail; clearing
+// only its contents is always safe.
+function clearContents(dir: string): void {
+  for (const name of readdirSync(dir)) {
+    rmSync(join(dir, name), { recursive: true, force: true });
+  }
 }
 
-cpSync(join(repoRoot, "game"), join(outDir, "game"), { recursive: true });
-
-// Decode each screenshots-b64/<name>.png.b64 (one base64 string per
-// file) back to the original PNG bytes and write them as
-// screenshots/<name>.png in the output.
-const shotsDir = join(outDir, "screenshots");
-mkdirSync(shotsDir, { recursive: true });
-const encoded = readdirSync(join(repoRoot, "screenshots-b64")).sort();
-for (const file of encoded) {
-  if (!file.endsWith(".png.b64")) continue;
-  const name = file.slice(0, -".b64".length);
-  const text = readFileSync(join(repoRoot, "screenshots-b64", file), "utf8").trim();
-  const bytes = Buffer.from(text, "base64");
-  writeFileSync(join(shotsDir, name), bytes);
-  console.log("decoded " + name + " (" + bytes.length + " bytes)");
+// Copy one tree into another, visiting entries in sorted order so the
+// result does not depend on readdir order.
+function copyTreeSorted(from: string, to: string): void {
+  mkdirSync(to, { recursive: true });
+  const names = readdirSync(from).sort();
+  for (const name of names) {
+    const src = join(from, name);
+    const dst = join(to, name);
+    if (statSync(src).isDirectory()) {
+      copyTreeSorted(src, dst);
+    } else {
+      cpSync(src, dst);
+    }
+  }
 }
 
-const dossier = buildDossier(outDir, {
-  text_max_bytes: 163840,
-  screenshots: { max: 4, max_bytes: 262144 },
-  game_max_files: 993,
-  game_max_bytes: 50331648,
-  game_path_max_bytes: 1000,
-});
+function main(): void {
+  mkdirSync(outDir, { recursive: true });
+  clearContents(outDir);
 
-writeFileSync(join(outDir, "dossier.json"), dossier);
-console.log("wrote " + join(outDir, "dossier.json") + " (" + dossier.length + " bytes)");
+  // 1. The playable game, copied wholesale.
+  copyTreeSorted(join(repoDir, 'game'), join(outDir, 'game'));
+
+  // 2. Screenshots: each *.png.b64 file holds one base64 string. Decode
+  // it and store the real PNG under screenshots/, keeping the same
+  // stem name. Files with any other suffix are ignored, and the
+  // sorted order keeps repeated runs identical.
+  const shotsDir = join(outDir, 'screenshots');
+  mkdirSync(shotsDir, { recursive: true });
+  const encodedDir = join(repoDir, 'screenshots-b64');
+  if (existsSync(encodedDir)) {
+    const encoded = readdirSync(encodedDir)
+      .filter((name) => name.endsWith('.png.b64'))
+      .sort();
+    for (const name of encoded) {
+      const raw = readFileSync(join(encodedDir, name), 'utf8').trim();
+      const png = Buffer.from(raw, 'base64');
+      const stem = basename(name, '.png.b64');
+      writeFileSync(join(shotsDir, `${stem}.png`), png);
+      console.log(`screenshot ${stem}.png: ${png.length} bytes`);
+    }
+  }
+
+  // 3. The dossier: a canonical description of game/ and screenshots/,
+  // built by the vendored make.fun helper under the bounty's caps.
+  const dossier = buildDossier(outDir, {
+    text_max_bytes: 163840,
+    screenshots: { max: 4, max_bytes: 262144 },
+    game_max_files: 993,
+    game_max_bytes: 50331648,
+    game_path_max_bytes: 1000,
+  });
+  const dossierPath = join(outDir, 'dossier.json');
+  writeFileSync(dossierPath, dossier);
+  console.log(`wrote ${dossierPath} (${dossier.length} bytes)`);
+}
+
+main();
