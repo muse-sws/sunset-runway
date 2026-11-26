@@ -24,8 +24,13 @@ const outDir = process.env.MAKEFUN_OUTPUT_DIR || "/output";
 
 // Start from a clean output directory so a second run writes exactly
 // the same bytes as the first, even if files were removed since.
-if (existsSync(outDir)) rmSync(outDir, { recursive: true, force: true });
+// Only the CONTENTS are removed, never the directory itself: the
+// grader mounts /output as a writable directory on a read-only
+// filesystem, so deleting it (and recreating it) fails with EACCES.
 mkdirSync(outDir, { recursive: true });
+for (const entry of readdirSync(outDir)) {
+  rmSync(join(outDir, entry), { recursive: true, force: true });
+}
 
 cpSync(join(repoRoot, "game"), join(outDir, "game"), { recursive: true });
 
