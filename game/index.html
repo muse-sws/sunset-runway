@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sunset Runway — A Flight Game</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<main class="stage">
+  <canvas id="game" width="1280" height="720" aria-label="Sunset Runway flight game"></canvas>
+  <div class="overlay" id="overlay">
+    <h1>Sunset Runway</h1>
+    <p class="tag">An original 2D flight game. Fly the rings, follow the river, land on the runway.</p>
+    <div class="controls">
+      <p><b>Up / Down arrows</b> — climb / descend &nbsp;·&nbsp; <b>Left / Right arrows</b> or <b>A / D</b> — bank &amp; turn</p>
+      <p><b>W / S</b> — throttle up / down &nbsp;·&nbsp; <b>Mouse</b> — move to steer, click to boost</p>
+      <p><b>Space</b> — level wings &nbsp;·&nbsp; <b>P</b> — pause &nbsp;·&nbsp; <b>R</b> — restart &nbsp;·&nbsp; <b>M</b> — sound on / off</p>
+    </div>
+    <button id="startBtn" type="button">Take Off</button>
+    <p class="fine">Three sorties in one flight: Ring Run — River Run — Final Approach. Watch fuel and damage. Land slow, low and lined up.</p>
+  </div>
+</main>
+<script type="module" src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,66 @@
+/* Sunset Runway — page shell only. All in-game art is drawn on the canvas. */
+:root {
+  --navy: #0e2238;
+  --teal: #1f6f6b;
+  --amber: #f2a65a;
+  --paper: #f4ead8;
+  --ink: #10202e;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; background: var(--navy); }
+body {
+  font-family: "Trebuchet MS", "Segoe UI", Verdana, sans-serif;
+  color: var(--paper);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.stage { position: relative; width: min(1280px, 100vw); }
+canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: #16324f;
+  border: 3px solid #2c4a63;
+  border-radius: 10px;
+}
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 24px;
+  text-align: center;
+  background: rgba(10, 28, 46, 0.72);
+  border-radius: 10px;
+}
+.overlay.hidden { display: none; }
+.overlay h1 {
+  margin: 0;
+  font-size: clamp(34px, 6vw, 64px);
+  letter-spacing: 0.06em;
+  color: var(--amber);
+  text-shadow: 0 3px 0 rgba(0, 0, 0, 0.35);
+}
+.overlay .tag { margin: 0; font-size: 17px; max-width: 640px; line-height: 1.5; }
+.controls { background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.18); border-radius: 8px; padding: 10px 18px; }
+.controls p { margin: 4px 0; font-size: 14px; line-height: 1.5; }
+.controls b { color: var(--amber); }
+#startBtn {
+  font: inherit;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--ink);
+  background: var(--amber);
+  border: 0;
+  border-radius: 999px;
+  padding: 12px 34px;
+  cursor: pointer;
+}
+#startBtn:hover { background: #ffc27a; }
+.fine { margin: 0; font-size: 13px; opacity: 0.85; max-width: 620px; line-height: 1.5; }
